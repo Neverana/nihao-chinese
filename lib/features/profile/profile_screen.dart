@@ -19,14 +19,19 @@ class _Achievement {
   final String descriptionRu;
   final bool Function(ContentRepository) isUnlocked;
   const _Achievement({
-    required this.id, required this.emoji,
-    required this.titleRu, required this.descriptionRu,
+    required this.id,
+    required this.emoji,
+    required this.titleRu,
+    required this.descriptionRu,
     required this.isUnlocked,
   });
 }
 
 final _achievements = [
-  _Achievement(id: 'first_lesson', emoji: '📝', titleRu: 'Первый шаг',
+  _Achievement(
+      id: 'first_lesson',
+      emoji: '📝',
+      titleRu: 'Первый шаг',
       descriptionRu: 'Пройди первый урок',
       isUnlocked: (repo) {
         final topics = repo.getTopicsForBlock('block_1');
@@ -35,21 +40,49 @@ final _achievements = [
         if (subs.isEmpty) return false;
         return repo.getStatus(subs.first.id) == ProgressStatus.completed;
       }),
-  _Achievement(id: 'words_10', emoji: '📖', titleRu: '10 слов',
-      descriptionRu: 'Изучи 10 слов', isUnlocked: (_) => false),
-  _Achievement(id: 'words_50', emoji: '📚', titleRu: '50 слов',
-      descriptionRu: 'Изучи 50 слов', isUnlocked: (_) => false),
-  _Achievement(id: 'topic_done', emoji: '🏆', titleRu: 'Первый тест',
-      descriptionRu: 'Пройди итоговый тест', isUnlocked: (_) => false),
-  _Achievement(id: 'streak_7', emoji: '🔥', titleRu: 'На огне!',
-      descriptionRu: '7 дней подряд', isUnlocked: (_) => false),
-  _Achievement(id: 'callig_5', emoji: '✍️', titleRu: 'Каллиграф',
-      descriptionRu: 'Напиши 5 иероглифов', isUnlocked: (_) => false),
-  _Achievement(id: 'block_1_done', emoji: '🌟', titleRu: 'Мастер HSK 1',
+  _Achievement(
+      id: 'words_10',
+      emoji: '📖',
+      titleRu: '10 слов',
+      descriptionRu: 'Изучи 10 слов',
+      isUnlocked: (_) => false),
+  _Achievement(
+      id: 'words_50',
+      emoji: '📚',
+      titleRu: '50 слов',
+      descriptionRu: 'Изучи 50 слов',
+      isUnlocked: (_) => false),
+  _Achievement(
+      id: 'topic_done',
+      emoji: '🏆',
+      titleRu: 'Первый тест',
+      descriptionRu: 'Пройди итоговый тест',
+      isUnlocked: (_) => false),
+  _Achievement(
+      id: 'streak_7',
+      emoji: '🔥',
+      titleRu: 'На огне!',
+      descriptionRu: '7 дней подряд',
+      isUnlocked: (_) => false),
+  _Achievement(
+      id: 'callig_5',
+      emoji: '✍️',
+      titleRu: 'Каллиграф',
+      descriptionRu: 'Напиши 5 иероглифов',
+      isUnlocked: (_) => false),
+  _Achievement(
+      id: 'block_1_done',
+      emoji: '🌟',
+      titleRu: 'Мастер HSK 1',
       descriptionRu: 'Завершить Блок 1',
-      isUnlocked: (repo) => repo.getStatus('block_1') == ProgressStatus.completed),
-  _Achievement(id: 'streak_30', emoji: '⚡', titleRu: 'Неудержимый',
-      descriptionRu: '30 дней подряд', isUnlocked: (_) => false),
+      isUnlocked: (repo) =>
+          repo.getStatus('block_1') == ProgressStatus.completed),
+  _Achievement(
+      id: 'streak_30',
+      emoji: '⚡',
+      titleRu: 'Неудержимый',
+      descriptionRu: '30 дней подряд',
+      isUnlocked: (_) => false),
 ];
 
 class ProfileScreen extends ConsumerWidget {
@@ -116,13 +149,16 @@ class _ProfileHeader extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 56, height: 56,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: t.accentSoft,
               shape: BoxShape.circle,
-              border: Border.all(color: t.accent.withValues(alpha: 0.3), width: 2),
+              border:
+                  Border.all(color: t.accent.withValues(alpha: 0.3), width: 2),
             ),
-            child: const Center(child: Text('🐉', style: TextStyle(fontSize: 28))),
+            child:
+                const Center(child: Text('🐉', style: TextStyle(fontSize: 28))),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -132,7 +168,8 @@ class _ProfileHeader extends ConsumerWidget {
                 Text('Ученик', style: ts.displayMedium),
                 const SizedBox(height: 6),
                 Wrap(
-                  spacing: 8, runSpacing: 4,
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
                     _SmallBadge(
                       icon: Icons.local_fire_department_rounded,
@@ -159,7 +196,8 @@ class _SmallBadge extends ConsumerWidget {
   final IconData icon;
   final String label;
   final Color color;
-  const _SmallBadge({required this.icon, required this.label, required this.color});
+  const _SmallBadge(
+      {required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -176,7 +214,8 @@ class _SmallBadge extends ConsumerWidget {
         Icon(icon, color: color, size: 13),
         const SizedBox(width: 3),
         Text(label,
-            style: ts.caption.copyWith(color: color, fontWeight: FontWeight.w700)),
+            style:
+                ts.caption.copyWith(color: color, fontWeight: FontWeight.w700)),
       ]),
     );
   }
@@ -206,10 +245,30 @@ class _AdaptiveStatsGrid extends ConsumerWidget {
     final isWide = width >= 600;
 
     final items = [
-      (Icons.menu_book_rounded, t.accent, '${stats.wordsLearned}', 'Слов изучено'),
-      (Icons.local_fire_department_rounded, t.accentWarn, '${stats.streakDays}', 'Дней подряд'),
-      (Icons.access_time_rounded, t.accentSuccess, '${stats.totalHours}ч', 'Время занятий'),
-      (Icons.flag_rounded, t.accentSecondary, '$completedTopics/$totalTopics', 'Тем пройдено'),
+      (
+        Icons.menu_book_rounded,
+        t.accent,
+        '${stats.wordsLearned}',
+        'Слов изучено'
+      ),
+      (
+        Icons.local_fire_department_rounded,
+        t.accentWarn,
+        '${stats.streakDays}',
+        'Дней подряд'
+      ),
+      (
+        Icons.access_time_rounded,
+        t.accentSuccess,
+        '${stats.totalHours}ч',
+        'Время занятий'
+      ),
+      (
+        Icons.flag_rounded,
+        t.accentSecondary,
+        '$completedTopics/$totalTopics',
+        'Тем пройдено'
+      ),
     ];
 
     if (isWide) {
@@ -258,7 +317,8 @@ class _StatCard extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 32, height: 32,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: item.$2.withValues(alpha: 0.12),
               shape: BoxShape.circle,
@@ -320,7 +380,9 @@ class _CourseProgress extends ConsumerWidget {
                     Expanded(
                       child: Text(block.titleRu,
                           style: ts.headlineMedium.copyWith(
-                              color: isLocked ? t.onSurfaceDisabled : t.onSurface)),
+                              color: isLocked
+                                  ? t.onSurfaceDisabled
+                                  : t.onSurface)),
                     ),
                     Text(
                       isLocked ? '🔒' : '$done/$total',
@@ -359,67 +421,85 @@ class _AchievementsGrid extends ConsumerWidget {
     final t = ref.watch(appTokensProvider);
     final ts = AppTextStyles.of(t);
 
-    return GridView.count(
-      crossAxisCount: 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      childAspectRatio: 0.85,
-      children: _achievements.map((ach) {
-        final unlocked = ach.isUnlocked(repo);
-        return GestureDetector(
-          onTap: () => showDialog(
-            context: context,
-            builder: (_) => AlertDialog(
-              backgroundColor: t.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(unlocked ? ach.emoji : '🔒',
-                      style: const TextStyle(fontSize: 48)),
-                  const SizedBox(height: 12),
-                  Text(ach.titleRu, style: ts.displayMedium, textAlign: TextAlign.center),
-                  const SizedBox(height: 6),
-                  Text(ach.descriptionRu, style: ts.bodyMuted, textAlign: TextAlign.center),
-                  const SizedBox(height: 8),
-                  Text(unlocked ? '✅ Получено!' : '🔒 Не получено',
-                      style: ts.label.copyWith(
-                          color: unlocked ? t.accentSuccess : t.onSurfaceMuted)),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Ок', style: ts.label.copyWith(color: t.accent)),
-                ),
-              ],
-            ),
-          ),
-          child: AppCard(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(unlocked ? ach.emoji : '🔒',
-                    style: TextStyle(
-                        fontSize: 26,
-                        color: unlocked ? null : t.onSurfaceDisabled)),
-                const SizedBox(height: 4),
-                Text(ach.titleRu,
-                    style: ts.caption.copyWith(
-                      color: unlocked ? t.onSurface : t.onSurfaceDisabled,
-                      fontWeight: FontWeight.w600,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width > 900
+            ? 8
+            : width > 600
+                ? 6
+                : 4;
+        final childAspectRatio = width > 900 ? 1.0 : 0.85;
+
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: childAspectRatio,
+          children: _achievements.map((ach) {
+            final unlocked = ach.isUnlocked(repo);
+            return GestureDetector(
+              onTap: () => showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  backgroundColor: t.surface,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(unlocked ? ach.emoji : '🔒',
+                          style: const TextStyle(fontSize: 48)),
+                      const SizedBox(height: 12),
+                      Text(ach.titleRu,
+                          style: ts.displayMedium, textAlign: TextAlign.center),
+                      const SizedBox(height: 6),
+                      Text(ach.descriptionRu,
+                          style: ts.bodyMuted, textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      Text(unlocked ? '✅ Получено!' : '🔒 Не получено',
+                          style: ts.label.copyWith(
+                              color: unlocked
+                                  ? t.accentSuccess
+                                  : t.onSurfaceMuted)),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child:
+                          Text('Ок', style: ts.label.copyWith(color: t.accent)),
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
+                  ],
+                ),
+              ),
+              child: AppCard(
+                padding: const EdgeInsets.all(6),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(unlocked ? ach.emoji : '🔒',
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: unlocked ? null : t.onSurfaceDisabled)),
+                    const SizedBox(height: 2),
+                    Text(ach.titleRu,
+                        style: ts.caption.copyWith(
+                          color: unlocked ? t.onSurface : t.onSurfaceDisabled,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }
@@ -432,14 +512,42 @@ class _SettingsSection extends ConsumerWidget {
     final currentMode = ref.watch(appThemeModeProvider);
 
     final themes = [
-      (AppThemeMode.lightGlass, 'Light\nGlass',
-          [const Color(0xFFC8D8FF), const Color(0xFFE0C8FF), const Color(0xFFC8F0E8)]),
-      (AppThemeMode.darkGlass, 'Dark\nGlass',
-          [const Color(0xFF0D0D1A), const Color(0xFF111830), const Color(0xFF0A1A0F)]),
-      (AppThemeMode.lightMaterial, 'Light\nMaterial',
-          [const Color(0xFFFFF4EC), const Color(0xFFFCF0FF), const Color(0xFFECF4FF)]),
-      (AppThemeMode.blackMaterial, 'Blue\nMaterial',
-          [const Color(0xFF0F1621), const Color(0xFF1C2535), const Color(0xFF243040)]),
+      (
+        AppThemeMode.lightGlass,
+        'Light\nGlass',
+        [
+          const Color(0xFFC8D8FF),
+          const Color(0xFFE0C8FF),
+          const Color(0xFFC8F0E8)
+        ]
+      ),
+      (
+        AppThemeMode.darkGlass,
+        'Dark\nGlass',
+        [
+          const Color(0xFF0D0D1A),
+          const Color(0xFF111830),
+          const Color(0xFF0A1A0F)
+        ]
+      ),
+      (
+        AppThemeMode.lightMaterial,
+        'Light\nMaterial',
+        [
+          const Color(0xFFFFF4EC),
+          const Color(0xFFFCF0FF),
+          const Color(0xFFECF4FF)
+        ]
+      ),
+      (
+        AppThemeMode.blackMaterial,
+        'Blue\nMaterial',
+        [
+          const Color(0xFF0F1621),
+          const Color(0xFF1C2535),
+          const Color(0xFF243040)
+        ]
+      ),
     ];
 
     return AppCard(
@@ -474,18 +582,22 @@ class _SettingsSection extends ConsumerWidget {
                               width: isSelected ? 2.5 : 1,
                             ),
                             boxShadow: isSelected
-                                ? [BoxShadow(
-                                    color: t.accent.withValues(alpha: 0.25),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 3))]
+                                ? [
+                                    BoxShadow(
+                                        color: t.accent.withValues(alpha: 0.25),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3))
+                                  ]
                                 : [],
                           ),
                           child: isSelected
                               ? Center(
                                   child: Container(
-                                    width: 20, height: 20,
+                                    width: 20,
+                                    height: 20,
                                     decoration: BoxDecoration(
-                                        color: t.accent, shape: BoxShape.circle),
+                                        color: t.accent,
+                                        shape: BoxShape.circle),
                                     child: const Icon(Icons.check_rounded,
                                         color: Colors.white, size: 13),
                                   ),

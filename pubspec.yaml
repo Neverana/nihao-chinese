@@ -54,6 +54,7 @@ flutter:
     - assets/content/blocks.json
     - assets/content/topics/
     - assets/content/words/
+    - assets/content/strokes/
     - assets/audio/words/
   fonts:
     - family: NotoSansSC

@@ -11,8 +11,11 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/services/stroke_data_service.dart';
 import '../../data/models/models.dart';
+import '../../data/models/stroke_data.dart';
 import '../../data/repositories/content_repository.dart';
+import '../calligraphy/widgets/stroke_practice_canvas.dart';
 import 'exercises/fill_in_blank_exercise.dart';
 import 'exercises/sentence_builder_exercise.dart';
 import 'exercises/tone_exercises.dart';
@@ -387,73 +390,126 @@ class _LessonTopBar extends ConsumerWidget {
         ),
         // FIX: Stack — счётчик ВСЕГДА по центру независимо от правой кнопки
         SizedBox(
-          height: 48,
+          height: 52,
           child: Stack(
             alignment: Alignment.center,
             children: [
               // Кнопка закрыть — слева
               Positioned(
-                left: 16,
+                left: 12,
                 child: GestureDetector(
                   onTap: onClose,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: t.surfaceHighlight,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: t.surfaceBorder),
+                    ),
                     child: Icon(Icons.close_rounded,
-                        color: t.onSurfaceMuted, size: 24),
+                        color: t.onSurfaceMuted, size: 20),
                   ),
                 ),
               ),
 
-              // Счётчик — строго центр
-              Text(
-                '${state.currentIndex + 1} / ${state.totalExercises}',
-                style: ts.headlineMedium,
+              // Счётчик — строго центр, в чипе
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: t.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: t.surfaceBorder, width: 1.5),
+                ),
+                child: Text(
+                  '${state.currentIndex + 1} / ${state.totalExercises}',
+                  style: ts.headlineMedium,
+                ),
               ),
 
               // FIX: правая кнопка в SizedBox фиксированной ширины
               Positioned(
                 right: 12,
                 child: SizedBox(
-                  width: 82,
+                  width: 88,
                   child: onTogglePinyin != null
                       ? GestureDetector(
                           onTap: onTogglePinyin,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 5),
+                                horizontal: 6, vertical: 6),
                             decoration: BoxDecoration(
                               color: state.pinyinEnabled
-                                  ? t.accentSoft
-                                  : t.surfaceHighlight,
-                              borderRadius: BorderRadius.circular(8),
+                                  ? t.accent.withValues(alpha: 0.15)
+                                  : t.surface,
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: state.pinyinEnabled
-                                    ? t.accent.withValues(alpha: 0.4)
+                                    ? t.accent.withValues(alpha: 0.5)
                                     : t.surfaceBorder,
+                                width: 1.5,
                               ),
+                              boxShadow: state.pinyinEnabled
+                                  ? [
+                                      BoxShadow(
+                                        color: t.accent.withValues(alpha: 0.15),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
-                            child: Text(
-                              state.pinyinEnabled ? '拼 ВКЛ' : '拼 ВЫКЛ',
-                              style: ts.caption.copyWith(
-                                color: state.pinyinEnabled
-                                    ? t.accent
-                                    : t.onSurfaceMuted,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              textAlign: TextAlign.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '拼',
+                                  style: TextStyle(
+                                    fontFamily: 'NotoSansSC',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: state.pinyinEnabled
+                                        ? t.accent
+                                        : t.onSurfaceMuted,
+                                  ),
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  state.pinyinEnabled ? 'ВКЛ' : 'ВЫКЛ',
+                                  style: ts.caption.copyWith(
+                                    color: state.pinyinEnabled
+                                        ? t.accent
+                                        : t.onSurfaceMuted,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 10,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
                           ),
                         )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.lock_outline_rounded,
-                                color: t.accentWarn, size: 15),
-                            const SizedBox(width: 4),
-                            Text('Тест',
-                                style:
-                                    ts.caption.copyWith(color: t.accentWarn)),
-                          ],
+                      : Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: t.accentWarn.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: t.accentWarn.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.lock_outline_rounded,
+                                  color: t.accentWarn, size: 14),
+                              const SizedBox(width: 4),
+                              Text('Тест',
+                                  style: ts.caption.copyWith(
+                                      color: t.accentWarn,
+                                      fontWeight: FontWeight.w700)),
+                            ],
+                          ),
                         ),
                 ),
               ),
@@ -580,7 +636,7 @@ class _WordMatchingState extends ConsumerState<WordMatchingExercise> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: Column(
@@ -595,9 +651,10 @@ class _WordMatchingState extends ConsumerState<WordMatchingExercise> {
                       final feedbackBad =
                           word != null && _feedback[word.id] == false;
 
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 56),
                           child: _MatchChip(
                             label: hanzi,
                             sublabel: widget.pinyinEnabled && word != null
@@ -615,7 +672,7 @@ class _WordMatchingState extends ConsumerState<WordMatchingExercise> {
                     }).toList(),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     children: _rightItems.map((tr) {
@@ -625,9 +682,10 @@ class _WordMatchingState extends ConsumerState<WordMatchingExercise> {
                           word != null && _matched.contains(word.id);
                       final isSelected = _selectedRight == tr;
 
-                      return Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 56),
                           child: _MatchChip(
                             label: tr,
                             isSelected: isSelected,
@@ -1337,7 +1395,7 @@ class _ShownTurn {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// CALLIGRAPHY
+// CALLIGRAPHY — пошаговое обучение чертам
 // ═════════════════════════════════════════════════════════════════════════════
 
 class CalligraphyExercise extends ConsumerStatefulWidget {
@@ -1359,9 +1417,55 @@ class CalligraphyExercise extends ConsumerStatefulWidget {
 }
 
 class _CalligraphyState extends ConsumerState<CalligraphyExercise> {
+  // For free-draw fallback when stroke data is unavailable
   final List<List<Offset>> _strokes = [];
-  List<Offset> _current = [];
   bool _isDone = false;
+  HanziStrokeData? _strokeData;
+  int _completedStrokes = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStrokeData();
+  }
+
+  Future<void> _loadStrokeData() async {
+    final word = widget.word;
+    if (word == null || word.hanzi.length != 1) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final service = StrokeDataService();
+    final data = await service.loadStrokeData(word.hanzi);
+
+    setState(() {
+      _strokeData = data;
+      _completedStrokes = 0;
+      _isLoading = false;
+    });
+  }
+
+  void _onStrokeCompleted() {
+    setState(() {
+      _completedStrokes++;
+    });
+  }
+
+  void _onCharacterCompleted() {
+    setState(() {
+      _isDone = true;
+    });
+  }
+
+  void _retryCharacter() {
+    setState(() {
+      _strokes.clear();
+      _completedStrokes = 0;
+      _isDone = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1382,6 +1486,17 @@ class _CalligraphyState extends ConsumerState<CalligraphyExercise> {
                   Text('${word.pinyin}  ', style: ts.pinyinLarge),
                   Text(word.translationRu, style: ts.bodyMuted),
                 ]),
+              if (_strokeData != null && !_isLoading)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Черта: $_completedStrokes/${_strokeData!.strokeCount}',
+                    style: ts.caption.copyWith(
+                      color: t.accent,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -1391,33 +1506,39 @@ class _CalligraphyState extends ConsumerState<CalligraphyExercise> {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: AspectRatio(
               aspectRatio: 1,
-              child: GestureDetector(
-                onPanStart: (d) => setState(() => _current = [d.localPosition]),
-                onPanUpdate: (d) =>
-                    setState(() => _current.add(d.localPosition)),
-                onPanEnd: (_) => setState(() {
-                  if (_current.length > 2) _strokes.add(List.from(_current));
-                  _current = [];
-                }),
-                child: CustomPaint(
-                  painter: _CalligraphyPainter(
-                    hanzi: word?.hanzi ?? '？',
-                    showGuide: widget.showGuide,
-                    strokes: _strokes,
-                    current: _current,
-                    gridColor: t.surfaceBorder,
-                    strokeColor: t.onSurface,
-                    guideColor: t.onSurface.withValues(alpha: 0.1),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: t.surface,
-                      borderRadius: BorderRadius.circular(t.radiusCard),
-                      border: Border.all(color: t.surfaceBorder, width: 2),
-                    ),
-                  ),
-                ),
-              ),
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator(color: t.accent))
+                  : _strokeData == null
+                      ? _LessonFreeDrawCanvas(
+                          hanzi: word?.hanzi ?? '？',
+                          showGuide: widget.showGuide,
+                          gridColor: t.surfaceBorder,
+                          strokeColor: t.onSurface,
+                          guideColor: t.onSurface.withValues(alpha: 0.1),
+                          surface: t.surface,
+                          radiusCard: t.radiusCard,
+                          surfaceBorder: t.surfaceBorder,
+                          onDone: () => setState(() => _isDone = true),
+                          hasStrokes: _strokes.isNotEmpty,
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: t.surface,
+                            borderRadius: BorderRadius.circular(t.radiusCard),
+                            border:
+                                Border.all(color: t.surfaceBorder, width: 2),
+                          ),
+                          child: StrokePracticeCanvas(
+                            strokeData: _strokeData!,
+                            completedStrokes: _completedStrokes,
+                            showHint: widget.showGuide,
+                            onStrokeCompleted: _onStrokeCompleted,
+                            onCharacterCompleted: _onCharacterCompleted,
+                            strokeColor: t.onSurface,
+                            hintColor: t.accent,
+                            gridColor: t.surfaceBorder,
+                          ),
+                        ),
             ),
           ),
         ),
@@ -1428,11 +1549,7 @@ class _CalligraphyState extends ConsumerState<CalligraphyExercise> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() {
-                    _strokes.clear();
-                    _current = [];
-                    _isDone = false;
-                  }),
+                  onTap: _retryCharacter,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
@@ -1453,49 +1570,116 @@ class _CalligraphyState extends ConsumerState<CalligraphyExercise> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: _strokes.isNotEmpty
-                      ? () => setState(() => _isDone = true)
-                      : null,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: _strokes.isNotEmpty
-                          ? t.accentSuccess.withValues(alpha: 0.15)
-                          : t.surfaceHighlight,
-                      borderRadius: BorderRadius.circular(t.radiusButton),
-                      border: Border.all(
+              if (_strokeData == null) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _strokes.isNotEmpty
+                        ? () => setState(() => _isDone = true)
+                        : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
                         color: _strokes.isNotEmpty
-                            ? t.accentSuccess
-                            : t.surfaceBorder,
+                            ? t.accentSuccess.withValues(alpha: 0.15)
+                            : t.surfaceHighlight,
+                        borderRadius: BorderRadius.circular(t.radiusButton),
+                        border: Border.all(
+                          color: _strokes.isNotEmpty
+                              ? t.accentSuccess
+                              : t.surfaceBorder,
+                        ),
                       ),
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.check_rounded,
+                                color: _strokes.isNotEmpty
+                                    ? t.accentSuccess
+                                    : t.onSurfaceDisabled,
+                                size: 18),
+                            const SizedBox(width: 6),
+                            Text('Готово',
+                                style: ts.label.copyWith(
+                                    color: _strokes.isNotEmpty
+                                        ? t.accentSuccess
+                                        : t.onSurfaceDisabled)),
+                          ]),
                     ),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check_rounded,
-                              color: _strokes.isNotEmpty
-                                  ? t.accentSuccess
-                                  : t.onSurfaceDisabled,
-                              size: 18),
-                          const SizedBox(width: 6),
-                          Text('Готово',
-                              style: ts.label.copyWith(
-                                  color: _strokes.isNotEmpty
-                                      ? t.accentSuccess
-                                      : t.onSurfaceDisabled)),
-                        ]),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
         LessonBottomNextButton(
             visible: _isDone, label: 'Далее', onTap: widget.onNext),
       ],
+    );
+  }
+}
+
+/// Свободное рисование в уроке когда нет данных о чертах.
+class _LessonFreeDrawCanvas extends StatefulWidget {
+  final String hanzi;
+  final bool showGuide;
+  final Color gridColor;
+  final Color strokeColor;
+  final Color guideColor;
+  final Color surface;
+  final double radiusCard;
+  final Color surfaceBorder;
+  final VoidCallback onDone;
+  final bool hasStrokes;
+
+  const _LessonFreeDrawCanvas({
+    required this.hanzi,
+    required this.showGuide,
+    required this.gridColor,
+    required this.strokeColor,
+    required this.guideColor,
+    required this.surface,
+    required this.radiusCard,
+    required this.surfaceBorder,
+    required this.onDone,
+    required this.hasStrokes,
+  });
+
+  @override
+  State<_LessonFreeDrawCanvas> createState() => _LessonFreeDrawState();
+}
+
+class _LessonFreeDrawState extends State<_LessonFreeDrawCanvas> {
+  final List<List<Offset>> _strokes = [];
+  List<Offset> _current = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: (d) => setState(() => _current = [d.localPosition]),
+      onPanUpdate: (d) => setState(() => _current.add(d.localPosition)),
+      onPanEnd: (_) => setState(() {
+        if (_current.length > 2) _strokes.add(List.from(_current));
+        _current = [];
+      }),
+      child: CustomPaint(
+        painter: _CalligraphyPainter(
+          hanzi: widget.hanzi,
+          showGuide: widget.showGuide,
+          strokes: _strokes,
+          current: _current,
+          gridColor: widget.gridColor,
+          strokeColor: widget.strokeColor,
+          guideColor: widget.guideColor,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: widget.surface,
+            borderRadius: BorderRadius.circular(widget.radiusCard),
+            border: Border.all(color: widget.surfaceBorder, width: 2),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1531,7 +1715,7 @@ class _CalligraphyPainter extends CustomPainter {
       canvas.drawLine(Offset(0, step * i), Offset(size.width, step * i), gp);
     }
     final dp = Paint()
-      ..color = gridColor.withOpacity(0.4)
+      ..color = gridColor.withValues(alpha: 0.4)
       ..strokeWidth = 0.5;
     canvas.drawLine(Offset.zero, Offset(size.width, size.height), dp);
     canvas.drawLine(Offset(size.width, 0), Offset(0, size.height), dp);
