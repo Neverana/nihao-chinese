@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/audio/audio_service.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/app_card.dart';
@@ -314,6 +315,20 @@ class ExerciseWidgetFactory {
           showGuide: !isFinalTest,
           onNext: onNext,
         ),
+      ExerciseType.listening => ListeningExercise(
+          words: words,
+          audioPath: config.params['audioPath'] as String?,
+          prompt: config.params['prompt'] as String? ??
+              'Прослушай аудио и выбери правильный ответ',
+          options:
+              List<String>.from(config.params['options'] as List? ?? const []),
+          correctAnswer: config.params['correctAnswer'] as String?,
+          maxPlays:
+              config.params['maxPlays'] as int? ?? (isFinalTest ? 2 : 999),
+          isFinalTest: isFinalTest,
+          onAnswer: onAnswer,
+          onNext: onNext,
+        ),
       ExerciseType.fillInTheBlank => FillInBlankExercise(
           words: words,
           pinyinEnabled: pinyinEnabled,
@@ -349,8 +364,6 @@ class ExerciseWidgetFactory {
           onAnswer: onAnswer,
           onNext: onNext,
         ),
-      ExerciseType.listening =>
-        _PlaceholderExercise(type: config.type, onNext: onNext),
     };
   }
 }
@@ -1754,6 +1767,182 @@ class _CalligraphyPainter extends CustomPainter {
 }
 
 // ── Placeholder ───────────────────────────────────────────────────────────────
+
+class ListeningExercise extends ConsumerStatefulWidget {
+  final List<Word> words;
+  final String? audioPath;
+  final String prompt;
+  final List<String> options;
+  final String? correctAnswer;
+  final int maxPlays;
+  final bool isFinalTest;
+  final void Function(bool) onAnswer;
+  final VoidCallback onNext;
+
+  const ListeningExercise({
+    required this.words,
+    required this.audioPath,
+    required this.prompt,
+    required this.options,
+    required this.correctAnswer,
+    required this.maxPlays,
+    required this.isFinalTest,
+    required this.onAnswer,
+    required this.onNext,
+    super.key,
+  });
+
+  @override
+  ConsumerState<ListeningExercise> createState() => _ListeningExerciseState();
+}
+
+class _ListeningExerciseState extends ConsumerState<ListeningExercise> {
+  int _plays = 0;
+  String? _selected;
+  bool _answered = false;
+  bool _playedOnce = false;
+
+  String? get _answer =>
+      widget.correctAnswer ??
+      (widget.words.isNotEmpty ? widget.words.first.translationRu : null);
+
+  List<String> _buildOptions() {
+    if (widget.options.isNotEmpty) return widget.options;
+    final pool = widget.words
+        .map((w) => w.translationRu)
+        .where((v) => v.isNotEmpty)
+        .toSet()
+        .toList();
+    if (_answer != null && !pool.contains(_answer)) pool.insert(0, _answer!);
+    return pool.take(4).toList();
+  }
+
+  Future<void> _play() async {
+    if (_plays >= widget.maxPlays) return;
+    final audio = ref.read(audioServiceProvider);
+    if (widget.audioPath != null && widget.audioPath!.isNotEmpty) {
+      await audio.playAsset(widget.audioPath!);
+    } else if (widget.words.isNotEmpty) {
+      await audio.playWord(widget.words.first.audioPath);
+    }
+    setState(() {
+      _plays++;
+      _playedOnce = true;
+    });
+  }
+
+  void _select(String option) {
+    if (_answered) return;
+    final correct = _answer != null && option == _answer;
+    setState(() {
+      _selected = option;
+      _answered = true;
+    });
+    widget.onAnswer(correct);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = ref.watch(appTokensProvider);
+    final ts = AppTextStyles.of(t);
+    final options = _buildOptions();
+    final canPlay = _plays < widget.maxPlays;
+
+    return Column(
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Аудирование', style: ts.displayMedium),
+                const SizedBox(height: 6),
+                Text(widget.prompt, style: ts.bodyMuted),
+                const SizedBox(height: 24),
+                Center(
+                  child: GestureDetector(
+                    onTap: canPlay ? _play : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: canPlay ? t.accentSoft : t.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: canPlay ? t.accent : t.surfaceBorder,
+                            width: 1.5),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.play_arrow_rounded,
+                              size: 44,
+                              color: canPlay ? t.accent : t.onSurfaceMuted),
+                          const SizedBox(height: 8),
+                          Text('Прослушать (${_plays}/${widget.maxPlays})',
+                              style: ts.label),
+                          if (widget.isFinalTest) ...[
+                            const SizedBox(height: 4),
+                            Text('В тесте не более 2 прослушиваний',
+                                style: ts.caption
+                                    .copyWith(color: t.onSurfaceMuted)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                if (widget.isFinalTest && _playedOnce) ...[
+                  Text('Выбери правильный ответ', style: ts.body),
+                  const SizedBox(height: 12),
+                ],
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: options.map((opt) {
+                    final selected = _selected == opt;
+                    final correct = _answered && _answer == opt;
+                    Color bg = t.surface;
+                    Color border = t.surfaceBorder;
+                    if (_answered) {
+                      if (correct) {
+                        bg = t.accentSuccess.withValues(alpha: 0.15);
+                        border = t.accentSuccess;
+                      } else if (selected) {
+                        bg = t.accentDanger.withValues(alpha: 0.15);
+                        border = t.accentDanger;
+                      }
+                    } else if (selected) {
+                      bg = t.accentSoft;
+                      border = t.accent;
+                    }
+                    return GestureDetector(
+                      onTap: () => _select(opt),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(t.radiusButton),
+                          border: Border.all(color: border, width: 1.5),
+                        ),
+                        child: Text(opt, style: ts.body),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ),
+        LessonBottomNextButton(
+            visible: _answered, label: 'Далее', onTap: widget.onNext),
+      ],
+    );
+  }
+}
 
 class _PlaceholderExercise extends ConsumerWidget {
   final ExerciseType type;

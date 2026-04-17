@@ -64,8 +64,7 @@ class FinalTestState {
 }
 
 class FinalTestNotifier extends StateNotifier<FinalTestState> {
-  FinalTestNotifier(int total)
-      : super(FinalTestState(totalExercises: total));
+  FinalTestNotifier(int total) : super(FinalTestState(totalExercises: total));
 
   void answer(bool correct) {
     if (correct) {
@@ -90,9 +89,9 @@ class FinalTestNotifier extends StateNotifier<FinalTestState> {
   }
 }
 
-final finalTestProvider =
-    StateNotifierProvider.autoDispose.family<FinalTestNotifier,
-        FinalTestState, int>((ref, total) => FinalTestNotifier(total));
+final finalTestProvider = StateNotifierProvider.autoDispose
+    .family<FinalTestNotifier, FinalTestState, int>(
+        (ref, total) => FinalTestNotifier(total));
 
 // ── FinalTestScreen ───────────────────────────────────────────────────────────
 
@@ -149,6 +148,24 @@ class _FinalTestScreenState extends ConsumerState<FinalTestScreen> {
         words: shuffled,
       ));
     }
+    // listening (2 попытки)
+    if (allWords.isNotEmpty) {
+      final target = allWords.first;
+      _exercises.add(_ExItem(
+        config: ExerciseConfig(
+          type: ExerciseType.listening,
+          params: {
+            'audioPath':
+                target.audioPath ?? 'assets/audio/words/${target.id}.mp3',
+            'prompt': 'Прослушай аудио и выбери правильный перевод',
+            'options': allWords.take(4).map((w) => w.translationRu).toList(),
+            'correctAnswer': target.translationRu,
+            'maxPlays': 2,
+          },
+        ),
+        words: allWords,
+      ));
+    }
     // calligraphy (без образца)
     if (allWords.isNotEmpty) {
       _exercises.add(_ExItem(
@@ -203,8 +220,7 @@ class _FinalTestScreenState extends ConsumerState<FinalTestScreen> {
       return AppBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
-          body: Center(
-              child: Text('Загрузка...', style: ts.displayMedium)),
+          body: Center(child: Text('Загрузка...', style: ts.displayMedium)),
         ),
       );
     }
@@ -235,15 +251,14 @@ class _FinalTestScreenState extends ConsumerState<FinalTestScreen> {
                       isFinalTest: true,
                       onAnswer: (correct) {
                         ref
-                            .read(finalTestProvider(_exercises.length)
-                                .notifier)
+                            .read(finalTestProvider(_exercises.length).notifier)
                             .answer(correct);
                       },
                       onNext: () {
                         final notifier = ref.read(
                             finalTestProvider(_exercises.length).notifier);
-                        final st = ref
-                            .read(finalTestProvider(_exercises.length));
+                        final st =
+                            ref.read(finalTestProvider(_exercises.length));
                         notifier.next();
                         if (!st.isFinished &&
                             st.currentIndex + 1 < _exercises.length) {
@@ -277,16 +292,15 @@ class _FinalTestScreenState extends ConsumerState<FinalTestScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Остаться',
-                style: ts.label.copyWith(color: t.accent)),
+            child: Text('Остаться', style: ts.label.copyWith(color: t.accent)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.pop();
             },
-            child: Text('Выйти',
-                style: ts.label.copyWith(color: t.accentDanger)),
+            child:
+                Text('Выйти', style: ts.label.copyWith(color: t.accentDanger)),
           ),
         ],
       ),
@@ -345,8 +359,7 @@ class _FinalTestTopBar extends ConsumerWidget {
                         color: t.accentWarn, size: 18),
                     const SizedBox(width: 6),
                     Text('Итоговый тест',
-                        style: ts.headlineMedium
-                            .copyWith(color: t.accentWarn)),
+                        style: ts.headlineMedium.copyWith(color: t.accentWarn)),
                   ],
                 ),
               ),
@@ -357,7 +370,9 @@ class _FinalTestTopBar extends ConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.only(left: 4),
                     child: Icon(
-                      alive ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      alive
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
                       color: alive ? t.accentDanger : t.onSurfaceDisabled,
                       size: 22,
                     ),
@@ -400,8 +415,8 @@ class _FailScreen extends ConsumerWidget {
             children: [
               const Text('😓', style: TextStyle(fontSize: 72)),
               const SizedBox(height: 20),
-              Text('Попробуй ещё раз', style: ts.displayLarge,
-                  textAlign: TextAlign.center),
+              Text('Попробуй ещё раз',
+                  style: ts.displayLarge, textAlign: TextAlign.center),
               const SizedBox(height: 8),
               Text(
                 'Не хватило жизней. Повтори тему и попробуй снова.',
@@ -440,8 +455,8 @@ class _FailScreen extends ConsumerWidget {
                     border: Border.all(color: t.surfaceBorder),
                   ),
                   child: Text('Повторить тему',
-                      style: ts.headlineMedium.copyWith(
-                          color: t.onSurfaceMuted),
+                      style:
+                          ts.headlineMedium.copyWith(color: t.onSurfaceMuted),
                       textAlign: TextAlign.center),
                 ),
               ),

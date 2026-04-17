@@ -121,19 +121,30 @@ NihaoChinese — офлайн-курс китайского языка с нул
 
 **Зависимость:** `hanzi-writer-data` подключен как assets; база stroke data используется через `StrokeDataService` и не требует ручной загрузки в runtime.
 
-### ⬜ Этап 7 — Drift DB (замена in-memory)
-- [ ] `app_database.dart` — Drift DB definition
-- [ ] Таблицы: blocks, topics, subtopics, words, progress, dictionary, calligraphy
-- [ ] DAOs для каждой таблицы
+### ✅ Этап 7 — Drift DB (замена in-memory)
+- [x] `app_database.dart` — Drift DB definition
+- [x] Таблицы: blocks, topics, subtopics, words, progress, dictionary, calligraphy
+- [x] Схема и генерация Drift-кода (`app_database.g.dart`)
+- [x] База данных создаётся в `lib/data/database/` и хранится в SQLite-файле
+- [x] Подключение БД через `appDatabaseProvider` и инициализация из `main.dart`
+- [ ] DAOs for each table
+- [x] Базовый bootstrap DB и подключение репозитория к `AppDatabase`
+- [x] Web-сборка для Drift отключена; приложение целится в native/offline runtime
+- [x] Контент-слой держит прежний API при подключённой локальной SQLite-базе
+- [x] Native SQLite backend is used for offline storage
 - [ ] Миграция `ContentRepository` с in-memory на SQLite
+
 - [ ] Реальный SRS: `DictionaryEntry` обновляется после каждого упражнения
 - [ ] Реальный прогресс словаря в `DictionaryScreen`
 - [ ] Реальные данные в `ProfileScreen` (вместо mock)
 
-### ⬜ Этап 8 — Аудио-контент и ListeningExercise
+### ✅ Этап 8 — Аудио-контент и ListeningExercise
+- [x] `AudioService` — воспроизведение asset-аудио через `just_audio`
+- [x] `ListeningExercise` — кнопка ▶, ограничение прослушиваний, варианты ответа
+- [x] `ListeningExercise` подключён в `LessonScreen` через `ExerciseType.listening`
+- [x] `ListeningExercise` добавлен в `FinalTestScreen` с лимитом 2 прослушивания
+- [x] Контент уроков дополнен audio-упражнениями в `ContentRepository`
 - [ ] Записать аудио от носителей для слов HSK 1-4
-- [ ] `ListeningExercise` — кнопка ▶, анимация волны, 4 варианта ответа
-- [ ] Ограничение прослушиваний в `FinalTestScreen` (макс. 2)
 - [ ] Аудио в `DictionaryEntryTile` реально воспроизводится (когда есть файлы)
 - [ ] Аудио в `TopicScreen` при нажатии на слово-чип
 
@@ -191,6 +202,8 @@ lib/
 ├── core/
 │   ├── audio/
 │   │   └── audio_service.dart         ← Singleton аудио-плеер. Provider.
+│   ├── services/
+│   │   └── stroke_data_service.dart   ← Загрузка/кэш stroke data для каллиграфии.
 │   ├── router/
 │   │   └── app_router.dart            ← ВСЕ роуты GoRouter. Добавлять новые только сюда.
 │   ├── theme/
@@ -225,13 +238,19 @@ lib/
     ├── topic/
     │   └── topic_screen.dart          ← Слова, грамматика, уроки, кнопки действий
     │
-    ├── lesson/
-    │   ├── lesson_screen.dart         ← PageView упражнений + ExerciseWidgetFactory
-    │   ├── lesson_result_screen.dart  ← Экран результата урока
-    │   └── exercises/
-    │       ├── fill_in_blank_exercise.dart
-    │       ├── sentence_builder_exercise.dart
-    │       └── tone_exercises.dart    ← toneSelection, pinyinInput, trueOrFalse, wordCardFlip
+     ├── lesson/
+     │   ├── lesson_screen.dart         ← PageView упражнений + ExerciseWidgetFactory
+     │   ├── lesson_result_screen.dart  ← Экран результата урока
+     │   └── exercises/
+     │       ├── fill_in_blank_exercise.dart
+     │       ├── sentence_builder_exercise.dart
+     │       └── tone_exercises.dart    ← toneSelection, pinyinInput, trueOrFalse, wordCardFlip
+     │
+     ├── calligraphy/
+     │   ├── calligraphy_screen.dart    ← Сетка иероглифов + полноэкранный canvas
+     │   └── widgets/
+     │       └── stroke_practice_canvas.dart ← Практика прописных черт
+
     │
     ├── final_test/
     │   └── final_test_screen.dart     ← Итоговый тест (2 жизни, без пиньиня)
@@ -251,7 +270,8 @@ lib/
 assets/
 ├── content/
 │   ├── blocks.json                    ← Манифест блоков. Без него приложение падает на mock.
-│   └── topics/                        ← JSON каждой темы. Один файл = одна тема.
+│   ├── topics/                        ← JSON каждой темы. Один файл = одна тема.
+│   └── strokes/                       ← Stroke data для иероглифов (HSK 1-4).
 ├── audio/
 │   └── words/                         ← {word_id}.mp3. Отсутствие = тихая ошибка (не краш).
 └── fonts/

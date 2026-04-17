@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 import 'core/theme/app_theme_mode.dart';
+import 'data/database/database_provider.dart';
 import 'data/repositories/content_repository.dart';
 
 void main() async {
@@ -29,8 +30,10 @@ void main() async {
   // Загрузить тему
   await container.read(appThemeModeProvider.notifier).loadSaved();
 
-  // Сидировать контент (JSON → in-memory)
-  await container.read(contentRepositoryProvider).seedIfNeeded();
+  // Инициализация базы и сидирование контента
+  container.read(appDatabaseProvider);
+  final repo = container.read(contentRepositoryProvider);
+  await repo.seedIfNeeded();
 
   runApp(
     UncontrolledProviderScope(
